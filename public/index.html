@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나의 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root {
+  --gd:   #1B3D2A;   /* green dark  */
+  --gm:   #2E7D50;   /* green mid   */
+  --gl:   #E8F5EE;   /* green light */
+  --gb:   #C2DDD0;   /* green border*/
+  --gray: #6B7A72;
+  --grayL:#F4F7F5;
+  --bd:   #E4EBE7;
+  --text: #111916;
+  --sub:  #6B7A72;
+  --done: #A0B4A8;
+  --r:    16px;
+  --rs:   10px;
+  --sw:   220px;
+  --amb:  #B45309;
+  --ambL: #FEF3C7;
+  --teal: #0D7A6B;
+  --tealL:#CCFAF4;
+}
+
+body {
+  font-family:'DM Sans','Noto Sans KR',-apple-system,sans-serif;
+  background:#EFF4F1;
+  color:var(--text);
+  min-height:100vh;
+  font-size:14px;
+  line-height:1.5;
+}
+
+/* ─ Layout ─ */
+.layout{display:flex;min-height:100vh}
+
+/* ─ Sidebar ─ */
+.sidebar {
+  width:var(--sw);
+  background:#fff;
+  border-right:1px solid var(--bd);
+  flex-shrink:0;
+  position:fixed;
+  top:0;left:0;bottom:0;
+  z-index:100;
+  display:flex;
+  flex-direction:column;
+  overflow-y:auto;
+}
+.sb-brand {
+  padding:22px 18px 18px;
+  border-bottom:1px solid var(--bd);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.sb-brand-icon {
+  width:36px;height:36px;
+  background:var(--gd);
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.sb-brand-name{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-0.01em}
+.sb-brand-repo{font-size:10.5px;color:var(--sub);margin-top:1px;font-weight:500}
+.sb-section{font-size:9.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--sub);padding:18px 16px 6px}
+.sb-item {
+  display:flex;align-items:center;gap:9px;
+  padding:9px 11px;margin:2px 8px;
+  border-radius:var(--rs);
+  font-size:13.5px;font-weight:500;color:var(--sub);
+  cursor:pointer;transition:all .15s;
+}
+.sb-item:hover{color:var(--gd);background:var(--gl)}
+.sb-item.active{color:var(--gd);background:var(--gl);font-weight:600}
+.sb-footer{margin-top:auto;padding:14px;border-top:1px solid var(--bd)}
+.sb-reset {
+  display:flex;align-items:center;gap:7px;width:100%;
+  padding:7px 11px;background:var(--grayL);
+  border:1px solid var(--bd);border-radius:var(--rs);
+  color:var(--sub);font-size:12px;font-weight:500;
+  cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;
+}
+.sb-reset:hover{background:var(--gl);color:var(--gd);border-color:var(--gb)}
+
+/* ─ Main ─ */
+.main{margin-left:var(--sw);flex:1;padding:36px 40px 80px;max-width:calc(var(--sw) + 860px)}
+
+/* ─ Page header ─ */
+.ph{margin-bottom:28px}
+.ph-title{font-size:26px;font-weight:700;letter-spacing:-0.03em;color:var(--text);margin-bottom:4px}
+.ph-sub{font-size:13px;color:var(--sub)}
+
+/* ─ Section label ─ */
+.sl {
+  font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--sub);border-bottom:1px solid var(--bd);
+  padding-bottom:8px;margin:28px 0 16px;
+}
+
+/* ─ Cards ─ */
+.card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:20px 24px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+
+/* ─ Stat grid ─ */
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.stat-card {
+  border-radius:var(--r);padding:22px 24px;
+  position:relative;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.05);
+}
+.stat-card.featured{background:var(--gd);color:#fff}
+.stat-card.plain{background:#fff;border:1px solid var(--bd)}
+.stat-card.plain2{background:#fff;border:1px solid var(--bd)}
+.stat-card-label{font-size:11.5px;font-weight:600;letter-spacing:.02em;margin-bottom:10px}
+.stat-card.featured .stat-card-label{color:rgba(255,255,255,.65)}
+.stat-card.plain .stat-card-label,.stat-card.plain2 .stat-card-label{color:var(--sub)}
+.stat-num{font-size:38px;font-weight:700;letter-spacing:-0.04em;line-height:1}
+.stat-card.featured .stat-num{color:#fff}
+.stat-card.plain .stat-num{color:var(--gd)}
+.stat-card.plain2 .stat-num{color:var(--amb)}
+.stat-card-sub{font-size:11.5px;margin-top:8px;display:flex;align-items:center;gap:5px}
+.stat-card.featured .stat-card-sub{color:rgba(255,255,255,.5)}
+.stat-card.plain .stat-card-sub,.stat-card.plain2 .stat-card-sub{color:var(--sub)}
+.stat-arrow{
+  position:absolute;top:16px;right:16px;
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+.stat-card.featured .stat-arrow{background:rgba(255,255,255,.15)}
+.stat-card.plain .stat-arrow{background:var(--gl)}
+.stat-card.plain2 .stat-arrow{background:var(--ambL)}
+
+/* ─ Progress bar ─ */
+.prog-wrap{height:6px;background:var(--grayL);border-radius:99px;margin-top:12px;overflow:hidden}
+.prog-fill{height:100%;background:var(--gm);border-radius:99px;transition:width .7s ease}
+
+/* ─ Tasks ─ */
+.tg-label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin:18px 0 8px}
+.tg-label:first-child{margin-top:0}
+.task-item{display:flex;align-items:flex-start;gap:10px;padding:5px 0;font-size:13.5px;color:var(--text)}
+.task-item.done{color:var(--done);text-decoration:line-through}
+.chk{width:17px;height:17px;border:1.5px solid var(--bd);border-radius:5px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.chk.on{background:var(--gm);border-color:var(--gm)}
+.chk.on::after{content:'';display:block;width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translateY(-1px)}
+
+/* ─ Nav cards ─ */
+.nav-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.nav-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.03);transition:box-shadow .15s}
+.nav-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.nav-card-title{font-size:9.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gm);margin-bottom:10px}
+.nav-card ul{list-style:none}
+.nav-card ul li{padding:3px 0;font-size:12.5px;color:var(--sub);font-weight:500}
+
+/* ─ Table ─ */
+.dtable{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border-radius:var(--r);overflow:hidden;border:1px solid var(--bd);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.dtable thead th{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);background:var(--grayL);border-bottom:1px solid var(--bd);padding:10px 16px;text-align:left}
+.dtable tbody td{padding:11px 16px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.dtable tbody tr:last-child td{border-bottom:none}
+.dtable tbody tr:hover td{background:#FAFCFA}
+
+/* ─ Badges ─ */
+.bdg{display:inline-flex;align-items:center;border-radius:6px;font-size:11px;font-weight:600;padding:3px 9px;white-space:nowrap}
+.bdg-green{background:var(--gl);color:var(--gd);border:1px solid var(--gb)}
+.bdg-gray{background:var(--grayL);color:var(--gray);border:1px solid var(--bd)}
+.bdg-teal{background:var(--tealL);color:var(--teal);border:1px solid #99E8DC}
+.bdg-amber{background:var(--ambL);color:var(--amb);border:1px solid #FCD34D}
+
+/* ─ Tags ─ */
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tag{background:var(--grayL);border:1px solid var(--bd);border-radius:8px;font-size:12px;padding:4px 10px;color:var(--text);font-weight:500}
+.tag-tool{background:var(--gl);border-color:var(--gb);color:var(--gd)}
+
+/* ─ Profile hero ─ */
+.profile-hero{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:28px;display:flex;gap:28px;align-items:flex-start;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.profile-photo{width:110px;height:142px;border-radius:var(--rs);border:1px solid var(--bd);object-fit:cover;object-position:top center;flex-shrink:0;background:var(--grayL)}
+.profile-photo-placeholder{width:110px;height:142px;border-radius:var(--rs);background:var(--gl);border:1px solid var(--gb);display:flex;align-items:center;justify-content:center;font-size:38px;font-weight:700;color:var(--gm);flex-shrink:0}
+.profile-name{font-size:24px;font-weight:700;letter-spacing:-0.03em;margin-bottom:2px}
+.profile-name-en{font-size:12px;color:var(--sub);margin-bottom:14px;letter-spacing:.04em;font-weight:500}
+.profile-target{display:inline-flex;align-items:center;gap:6px;background:var(--gl);border:1px solid var(--gb);border-radius:8px;padding:6px 13px;font-size:12.5px;font-weight:600;color:var(--gd);margin-bottom:14px}
+.profile-contacts{display:flex;flex-direction:column;gap:6px}
+.profile-crow{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--gray)}
+.profile-crow a{color:var(--gm);text-decoration:none}
+.profile-crow a:hover{text-decoration:underline}
+
+/* ─ Strength list ─ */
+.strength-list{display:flex;flex-direction:column;gap:14px}
+.strength-item{display:flex;gap:13px;align-items:flex-start}
+.strength-num{font-size:11px;font-weight:700;color:var(--gd);background:var(--gl);border:1px solid var(--gb);border-radius:6px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.strength-title{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.strength-desc{font-size:12.5px;color:var(--sub);line-height:1.6}
+
+/* ─ Timeline ─ */
+.timeline{padding-left:20px;position:relative}
+.timeline::before{content:'';position:absolute;left:6px;top:8px;bottom:8px;width:1px;background:var(--bd)}
+.tl-item{display:flex;gap:16px;padding-bottom:20px;position:relative}
+.tl-item:last-child{padding-bottom:0}
+.tl-dot{position:absolute;left:-14px;top:5px;width:9px;height:9px;border-radius:50%;background:var(--gm);border:2px solid #EFF4F1;box-shadow:0 0 0 1.5px var(--gb)}
+.tl-dot.current{background:var(--teal);box-shadow:0 0 0 1.5px #99E8DC}
+.tl-period{font-size:11px;font-weight:600;color:var(--gm);min-width:118px;padding-top:1px;white-space:nowrap;flex-shrink:0}
+.tl-period.current{color:var(--teal)}
+.tl-title{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.tl-desc{font-size:12.5px;color:var(--sub);line-height:1.6}
+
+/* ─ Awards ─ */
+.award-item{display:flex;align-items:center;gap:13px;padding:12px 0;border-bottom:1px solid var(--bd)}
+.award-item:last-child{border-bottom:none}
+.award-icon{width:36px;height:36px;background:var(--ambL);border:1px solid #FCD34D;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.award-name{font-size:13.5px;font-weight:600;margin-bottom:2px}
+.award-meta{font-size:11.5px;color:var(--sub)}
+
+/* ─ Archive grid ─ */
+.archive-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.archive-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:18px 20px;box-shadow:0 2px 6px rgba(0,0,0,.04);transition:all .15s}
+.archive-card:hover{box-shadow:0 6px 20px rgba(0,0,0,.09);border-color:var(--gb);transform:translateY(-1px)}
+.archive-meta{display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap}
+.archive-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.archive-org{font-size:12px;color:var(--sub);margin-bottom:8px}
+.archive-result{font-size:12.5px;color:var(--gray);line-height:1.5;padding-top:8px;border-top:1px solid var(--bd)}
+
+/* ─ Chart ─ */
+.chart-card{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:24px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+
+/* ─ Two-col ─ */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.inner-card{background:var(--grayL);border:1px solid var(--bd);border-radius:var(--r);padding:18px}
+.inner-card-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--sub);margin-bottom:12px}
+
+/* ─ Setup screen ─ */
+.setup-overlay{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#EFF4F1;padding:24px}
+.setup-card{background:#fff;border:1px solid var(--bd);border-radius:20px;padding:44px;width:100%;max-width:480px;box-shadow:0 12px 40px rgba(0,0,0,.08)}
+.setup-icon{width:48px;height:48px;background:var(--gd);border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:22px}
+.setup-title{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px}
+.setup-sub{font-size:13px;color:var(--sub);margin-bottom:28px;line-height:1.6}
+.form-group{margin-bottom:16px}
+.form-label{font-size:11px;font-weight:600;color:var(--gray);letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:6px}
+.form-input{width:100%;padding:10px 13px;border:1px solid var(--bd);border-radius:var(--rs);font-size:13.5px;color:var(--text);background:var(--grayL);outline:none;transition:all .15s;font-family:inherit}
+.form-input:focus{border-color:var(--gm);background:#fff;box-shadow:0 0 0 3px rgba(46,125,80,.1)}
+.form-hint{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.5}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-primary{width:100%;padding:13px;background:var(--gd);color:#fff;border:none;border-radius:var(--rs);font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;transition:background .15s;font-family:inherit}
+.btn-primary:hover{background:#152E20}
+.btn-primary:disabled{background:var(--gb);cursor:not-allowed}
+
+/* ─ Loading / Error ─ */
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px;color:var(--sub);gap:14px}
+.spinner{width:28px;height:28px;border:2.5px solid var(--bd);border-top-color:var(--gm);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-box{background:#FFF5F5;border:1px solid #FFC5C5;border-radius:var(--rs);padding:14px 18px;font-size:13px;color:#B91C1C;margin:12px 0}
+
+/* ─ Filter pills ─ */
+.filter-bar{display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap}
+.filter-btn{padding:6px 14px;border-radius:99px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;border:1px solid var(--bd);background:#fff;color:var(--sub)}
+.filter-btn.active{background:var(--gd);color:#fff;border-color:var(--gd)}
+.filter-btn:hover:not(.active){background:var(--gl);color:var(--gd);border-color:var(--gb)}
+
+/* ─ Scrollbar ─ */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--bd);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+/* ══ GitHub API ══ */
+function makeGH(cfg) {
+  const { owner, repo, branch = 'master', token, vaultPath = '' } = cfg;
+  const headers = token ? { Authorization: `token ${token}` } : {};
+
+  function res(p) {
+    if (!p && !vaultPath) return '';
+    if (!p) return vaultPath;
+    return vaultPath ? `${vaultPath}/${p}` : p;
+  }
+  async function apiFetch(path) {
+    const enc = path.split('/').map(s => encodeURIComponent(s)).join('/');
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${enc}?ref=${branch}`;
+    const r = await fetch(url, { headers });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `GitHub ${r.status}`); }
+    return r.json();
+  }
+  function b64(str) {
+    const bytes = Uint8Array.from(atob(str.replace(/\n/g, '')), c => c.charCodeAt(0));
+    return new TextDecoder('utf-8').decode(bytes);
+  }
+  const gh = {
+    async getFile(p) { const d = await apiFetch(res(p)); if (Array.isArray(d)) throw new Error('dir'); return b64(d.content); },
+    async getDir(p)  { try { const d = await apiFetch(res(p)); return Array.isArray(d) ? d : []; } catch { return []; } },
+    async getImageUrl(p) {
+      try {
+        const d = await apiFetch(res(p));
+        if (Array.isArray(d)) return null;
+        const bin = atob(d.content.replace(/\n/g,''));
+        const bytes = new Uint8Array(bin.length);
+        for (let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+        const ext = p.split('.').pop().toLowerCase();
+        const mime = (ext==='png')?'image/png':'image/jpeg';
+        return URL.createObjectURL(new Blob([bytes],{type:mime}));
+      } catch { return null; }
+    },
+    async getConfig() {
+      try {
+        const text = await gh.getFile('dashboard.config.json');
+        return JSON.parse(text);
+      } catch {
+        return { home:'00.HOME.md', profile:'profile/profile.md', photo:'assets/IMG_3887.JPG.jpg',
+                 archive:'archive', archiveExclude:['index.md','log.md','_template.md'],
+                 coverletter:'coverletter', jd:'raw/jd' };
+      }
+    }
+  };
+  return gh;
+}
+
+/* ══ Parsers ══ */
+function parseFM(text) {
+  const m = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+  if (!m) return { meta:{}, body:text };
+  try { return { meta: jsyaml.load(m[1])||{}, body: text.slice(m[0].length).trim() }; }
+  catch { return { meta:{}, body:text }; }
+}
+
+function parseTasks(md) {
+  const lines = md.split('\n');
+  const groups = [];
+  let cur = null, inTodo = false;
+  for (const line of lines) {
+    const stripped = line.replace(/^[\t ]+/,'');
+    const indent = line.length - stripped.length;
+    const depth = line.startsWith('\t') ? (line.match(/^\t+/)||[''])[0].length : Math.round(indent/2);
+    const content = stripped.replace(/^-\s*/,'');
+    if (!inTodo && depth===0 && stripped.match(/^-\s*할 일/)) { inTodo=true; continue; }
+    if (inTodo && depth===0 && stripped.startsWith('-')) { inTodo=false; }
+    if (!inTodo) continue;
+    const tm = content.match(/^\[([x ])\]\s+(.+)/i);
+    if (depth===1 && !tm) { cur={name:content.trim(),tasks:[]}; groups.push(cur); }
+    else if (depth>=2 && tm && cur) cur.tasks.push({done:tm[1].toLowerCase()==='x', text:tm[2].trim()});
+  }
+  return groups;
+}
+
+function fmt(d) {
+  if (!d) return '';
+  try { return new Date(d).toLocaleDateString('ko-KR',{year:'numeric',month:'short',day:'numeric'}); }
+  catch { return String(d); }
+}
+
+/* ══ Icons ══ */
+const Ic = {
+  Home:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+  User:    ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+  Archive: ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  Chart:   ()=><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>,
+  Cog:     ()=><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>,
+  Mail:    ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>,
+  Phone:   ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>,
+  Link:    ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>,
+  Target:  ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+  ArrowUpRight: ()=><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>,
+};
+
+/* ══ Setup Screen ══ */
+function SetupScreen({ onSave }) {
+  const [form, setForm] = useState({owner:'',repo:'',branch:'master',token:'',vaultPath:''});
+  const [err, setErr] = useState('');
+  const [loading, setLoading] = useState(false);
+  function set(k,v) { setForm(f=>({...f,[k]:v})); }
+  async function save() {
+    if (!form.owner||!form.repo) { setErr('사용자명과 저장소 이름은 필수입니다.'); return; }
+    setLoading(true); setErr('');
+    try {
+      const gh = makeGH(form);
+      await gh.getDir('');
+      localStorage.setItem('dashboard_config', JSON.stringify(form));
+      onSave(form);
+    } catch(e) { setErr(`연결 실패: ${e.message}`); }
+    setLoading(false);
+  }
+  return (
+    <div className="setup-overlay">
+      <div className="setup-card">
+        <div className="setup-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+        </div>
+        <div className="setup-title">대시보드 설정</div>
+        <div className="setup-sub">GitHub 저장소 정보를 입력하면 Obsidian 볼트를 읽어 대시보드를 자동 생성합니다.</div>
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">GitHub 사용자명</label>
+            <input className="form-input" placeholder="TaeHee324" value={form.owner} onChange={e=>set('owner',e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">저장소 이름</label>
+            <input className="form-input" placeholder="TH-s-DV-note-obsidian" value={form.repo} onChange={e=>set('repo',e.target.value)} />
+          </div>
+        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label className="form-label">브랜치</label>
+            <input className="form-input" placeholder="master" value={form.branch} onChange={e=>set('branch',e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label className="form-label">볼트 경로 <span style={{fontWeight:400,textTransform:'none'}}>(선택)</span></label>
+            <input className="form-input" placeholder="루트면 비워두세요" value={form.vaultPath} onChange={e=>set('vaultPath',e.target.value)} />
+          </div>
+        </div>
+        <div className="form-group">
+          <label className="form-label">Personal Access Token</label>
+          <input className="form-input" type="password" placeholder="ghp_..." value={form.token} onChange={e=>set('token',e.target.value)} />
+          <div className="form-hint">Settings → Developer settings → <strong>Tokens (classic)</strong> → repo 권한 체크</div>
+        </div>
+        {err && <div className="error-box">{err}</div>}
+        <button className="btn-primary" onClick={save} disabled={loading}>{loading?'연결 확인 중...':'저장하고 시작하기 →'}</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══ Sidebar ══ */
+const NAV = [
+  {id:'home',    icon:Ic.Home,    label:'홈'},
+  {id:'profile', icon:Ic.User,    label:'나의 프로필'},
+  {id:'archive', icon:Ic.Archive, label:'경험 아카이브'},
+  {id:'skills',  icon:Ic.Chart,   label:'역량 분포'},
+];
+
+function Sidebar({page, setPage, onReset, config}) {
+  return (
+    <div className="sidebar">
+      <div className="sb-brand">
+        <div className="sb-brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+        </div>
+        <div>
+          <div className="sb-brand-name">My Dashboard</div>
+          <div className="sb-brand-repo">{config.owner}/{config.repo}</div>
+        </div>
+      </div>
+      <div className="sb-section">메뉴</div>
+      {NAV.map(n=>(
+        <div key={n.id} className={`sb-item${page===n.id?' active':''}`} onClick={()=>setPage(n.id)}>
+          <n.icon />{n.label}
+        </div>
+      ))}
+      <div className="sb-footer">
+        <button className="sb-reset" onClick={onReset}><Ic.Cog /> 설정 변경</button>
+      </div>
+    </div>
+  );
+}
+
+/* ══ Home Page ══ */
+function HomePage({gh}) {
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState('');
+
+  useEffect(()=>{
+    async function load() {
+      try {
+        const cfg = await gh.getConfig();
+        const excl = cfg.archiveExclude||['index.md','log.md','_template.md'];
+        const [homeMd, archiveDir, coverDir, jdDir] = await Promise.all([
+          gh.getFile(cfg.home).catch(()=>''),
+          gh.getDir(cfg.archive), gh.getDir(cfg.coverletter), gh.getDir(cfg.jd),
+        ]);
+        const taskGroups = parseTasks(homeMd);
+        const archiveCount = archiveDir.filter(f=>f.type==='file'&&!excl.includes(f.name)).length;
+        const coverCount = coverDir.filter(f=>f.type==='file').length;
+        const jdCount = jdDir.filter(f=>f.type==='file').length;
+        setData({taskGroups, archiveCount, coverCount, jdCount});
+      } catch(e) { setErr(e.message); }
+    }
+    load();
+  },[]);
+
+  if (err) return <div className="error-box">홈 로딩 오류: {err}</div>;
+  if (!data) return <div className="loading"><div className="spinner"></div><span>불러오는 중...</span></div>;
+
+  const allTasks = data.taskGroups.flatMap(g=>g.tasks);
+  const doneCnt = allTasks.filter(t=>t.done).length;
+  const pct = allTasks.length ? Math.round(doneCnt/allTasks.length*100) : 0;
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">취업 준비 대시보드</div>
+        <div className="ph-sub">자기계발 · 경험 아카이브 · 취업 준비</div>
+      </div>
+
+      <div className="sl">현황 요약</div>
+      <div className="stat-grid">
+        <div className="stat-card featured">
+          <div className="stat-arrow" style={{position:'absolute',top:16,right:16,width:28,height:28,borderRadius:'50%',background:'rgba(255,255,255,.15)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+            <Ic.ArrowUpRight />
+          </div>
+          <div className="stat-card-label">경험 아카이브</div>
+          <div className="stat-num">{data.archiveCount}</div>
+          <div className="stat-card-sub">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+            아카이브된 경험
+          </div>
+        </div>
+        <div className="stat-card plain">
+          <div className="stat-arrow" style={{position:'absolute',top:16,right:16,width:28,height:28,borderRadius:'50%',background:'var(--gl)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--gm)'}}>
+            <Ic.ArrowUpRight />
+          </div>
+          <div className="stat-card-label">자소서 작성</div>
+          <div className="stat-num">{data.coverCount}</div>
+          <div className="stat-card-sub">작성된 자기소개서</div>
+        </div>
+        <div className="stat-card plain2">
+          <div className="stat-arrow" style={{position:'absolute',top:16,right:16,width:28,height:28,borderRadius:'50%',background:'var(--ambL)',display:'flex',alignItems:'center',justifyContent:'center',color:'var(--amb)'}}>
+            <Ic.ArrowUpRight />
+          </div>
+          <div className="stat-card-label">수집 채용공고</div>
+          <div className="stat-num">{data.jdCount}</div>
+          <div className="stat-card-sub">수집된 채용 JD</div>
+        </div>
+      </div>
+
+      <div className="sl">태스크 진행률 <span style={{fontWeight:400,marginLeft:8}}>{doneCnt} / {allTasks.length} 완료 · {pct}%</span></div>
+      <div className="card">
+        <div className="prog-wrap"><div className="prog-fill" style={{width:pct+'%'}}></div></div>
+        <div style={{marginTop:20}}>
+          {data.taskGroups.length===0&&<div style={{color:'var(--sub)',fontSize:13}}>00.HOME.md의 "할 일" 섹션에서 태스크를 읽어옵니다.</div>}
+          {data.taskGroups.map((g,i)=>(
+            <div key={i}>
+              <div className="tg-label">{g.name}</div>
+              {g.tasks.map((t,j)=>(
+                <div key={j} className={`task-item${t.done?' done':''}`}>
+                  <div className={`chk${t.done?' on':''}`}></div>
+                  <span>{t.text}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="sl">네비게이션</div>
+      <div className="nav-grid">
+        {[
+          {title:'AGENDA',     items:['자소서 폴더','작업 로그']},
+          {title:'경험 아카이브', items:['아카이브 목차','나의 프로필','경험 템플릿']},
+          {title:'채용 자료',    items:['채용공고 폴더','활동 파일','운영 규칙']},
+          {title:'성장 도구',    items:['만다라트','월간 노트','주간 노트']},
+        ].map((c,i)=>(
+          <div key={i} className="nav-card">
+            <div className="nav-card-title">{c.title}</div>
+            <ul>{c.items.map((it,j)=><li key={j}>{it}</li>)}</ul>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══ Profile Page ══ */
+function ProfilePage({gh}) {
+  const [profile, setProfile] = useState(null);
+  const [photoUrl, setPhotoUrl] = useState(null);
+  const [err, setErr] = useState('');
+
+  useEffect(()=>{
+    async function load() {
+      try {
+        const cfg = await gh.getConfig();
+        let text='';
+        try { text = await gh.getFile(cfg.profile); }
+        catch(e) { throw new Error(`프로필 파일(${cfg.profile}) 없음: ${e.message}`); }
+        setProfile(parseFM(text));
+        if (cfg.photo) {
+          const url = await gh.getImageUrl(cfg.photo);
+          if (url) setPhotoUrl(url);
+        }
+      } catch(e) { setErr(e.message); }
+    }
+    load();
+  },[]);
+
+  if (err) return <div className="error-box">프로필 로딩 오류: {err}</div>;
+  if (!profile) return <div className="loading"><div className="spinner"></div><span>불러오는 중...</span></div>;
+
+  const m = profile.meta;
+  const nameRaw = m.name||'';
+  const nameKo = nameRaw.replace(/\s*\(.*?\)/g,'').trim()||nameRaw;
+  const nameEnM = nameRaw.match(/\(([A-Z][A-Z\s]+)\)/);
+  const nameEn = nameEnM ? nameEnM[1] : '';
+
+  return (
+    <div>
+      <div className="sl" style={{marginTop:0}}>프로필</div>
+      <div className="profile-hero">
+        {photoUrl
+          ? <img className="profile-photo" src={photoUrl} alt="프로필" />
+          : <div className="profile-photo-placeholder">{nameKo[0]||'?'}</div>
+        }
+        <div className="profile-info" style={{flex:1}}>
+          <div className="profile-name">{nameKo}</div>
+          {nameEn && <div className="profile-name-en">{nameEn}</div>}
+          {m.target?.position && <div className="profile-target"><Ic.Target />{m.target.position}</div>}
+          <div className="profile-contacts">
+            {m.email && <div className="profile-crow"><Ic.Mail />{m.email}</div>}
+            {m.phone && <div className="profile-crow"><Ic.Phone />{m.phone}</div>}
+            {m.blog  && <div className="profile-crow"><Ic.Link /><a href={m.blog} target="_blank" rel="noreferrer">{m.blog.replace('https://','')}</a></div>}
+          </div>
+        </div>
+      </div>
+
+      {m.education?.length>0 && <>
+        <div className="sl">학력</div>
+        <table className="dtable">
+          <thead><tr><th>학교</th><th>전공</th><th>기간</th><th>상태</th></tr></thead>
+          <tbody>{m.education.map((e,i)=>(
+            <tr key={i}>
+              <td><strong>{e.school}</strong></td>
+              <td style={{color:'var(--sub)'}}>{e.major}</td>
+              <td style={{color:'var(--sub)',fontSize:12,whiteSpace:'nowrap'}}>{String(e.start||'').slice(0,7)} ~ {String(e.end||'').slice(0,7)}</td>
+              <td><span className={`bdg ${e.status==='재학중'?'bdg-green':'bdg-gray'}`}>{e.status}</span></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </>}
+
+      {m.experience?.length>0 && <>
+        <div className="sl">경력 · 인턴</div>
+        <table className="dtable">
+          <thead><tr><th>기업</th><th>직무</th><th>기간</th><th>유형</th></tr></thead>
+          <tbody>{m.experience.map((e,i)=>(
+            <tr key={i}>
+              <td><strong>{e.company}</strong></td>
+              <td style={{color:'var(--sub)'}}>{e.title}</td>
+              <td style={{color:'var(--sub)',fontSize:12,whiteSpace:'nowrap'}}>{String(e.start||'').slice(0,7)} ~ {String(e.end||'').slice(0,7)}</td>
+              <td><span className="bdg bdg-gray">{e.type}</span></td>
+            </tr>
+          ))}</tbody>
+        </table>
+      </>}
+
+      <div className="two-col" style={{marginTop:24}}>
+        {m.certifications?.length>0 && (
+          <div>
+            <div className="sl" style={{marginTop:0}}>자격증</div>
+            <table className="dtable">
+              <thead><tr><th>자격증</th><th>발급기관</th><th>취득일</th></tr></thead>
+              <tbody>{m.certifications.map((c,i)=>(
+                <tr key={i}><td><strong>{c.name}</strong></td><td style={{color:'var(--sub)'}}>{c.issuer}</td><td style={{color:'var(--sub)',fontSize:12}}>{String(c.date||'').slice(0,10)}</td></tr>
+              ))}</tbody>
+            </table>
+          </div>
+        )}
+        {m.skills?.languages?.length>0 && (
+          <div>
+            <div className="sl" style={{marginTop:0}}>어학</div>
+            <div className="inner-card"><div className="tags">{m.skills.languages.map((l,i)=><span key={i} className="tag">{l}</span>)}</div></div>
+          </div>
+        )}
+      </div>
+
+      {m.skills && (m.skills.domains?.length>0||m.skills.tools?.length>0) && <>
+        <div className="sl">스킬 & 툴</div>
+        <div className="two-col">
+          {m.skills.domains?.length>0 && <div className="inner-card"><div className="inner-card-title">도메인 역량</div><div className="tags">{m.skills.domains.map((d,i)=><span key={i} className="tag">{d}</span>)}</div></div>}
+          {m.skills.tools?.length>0   && <div className="inner-card"><div className="inner-card-title">툴 & 기술</div><div className="tags">{m.skills.tools.map((t,i)=><span key={i} className="tag tag-tool">{t}</span>)}</div></div>}
+        </div>
+      </>}
+
+      {m.awards?.length>0 && <>
+        <div className="sl">수상</div>
+        <div className="card">{m.awards.map((a,i)=>(
+          <div key={i} className="award-item">
+            <div className="award-icon">🏆</div>
+            <div><div className="award-name">{a.name}</div><div className="award-meta">{a.org} · {String(a.date||'').slice(0,10)}</div></div>
+          </div>
+        ))}</div>
+      </>}
+
+      {m.military && <>
+        <div className="sl">병역</div>
+        <div className="card" style={{fontSize:13.5,display:'flex',gap:12,alignItems:'center',flexWrap:'wrap'}}>
+          <strong>{m.military.branch}</strong>
+          <span style={{color:'var(--sub)'}}>{m.military.rank} · {m.military.unit}</span>
+          <span style={{color:'var(--sub)',fontSize:12}}>{String(m.military.start||'').slice(0,7)} ~ {String(m.military.end||'').slice(0,7)}</span>
+          <span className="bdg bdg-gray">{m.military.type}</span>
+        </div>
+      </>}
+    </div>
+  );
+}
+
+/* ══ Archive Page ══ */
+function ArchivePage({gh}) {
+  const [items, setItems] = useState(null);
+  const [err, setErr] = useState('');
+  const [filter, setFilter] = useState('전체');
+
+  useEffect(()=>{
+    async function load() {
+      try {
+        const cfg = await gh.getConfig();
+        const excl = cfg.archiveExclude||['index.md','log.md','_template.md'];
+        const files = await gh.getDir(cfg.archive);
+        const mdFiles = files.filter(f=>f.type==='file'&&f.name.endsWith('.md')&&!excl.includes(f.name));
+        const parsed = await Promise.all(mdFiles.map(async f=>{
+          try { const t=await gh.getFile(`${cfg.archive}/${f.name}`); return {...parseFM(t).meta, _file:f.name}; }
+          catch { return {_file:f.name}; }
+        }));
+        setItems(parsed.sort((a,b)=>(b.date||'')>(a.date||'')?1:-1));
+      } catch(e) { setErr(e.message); }
+    }
+    load();
+  },[]);
+
+  if (err) return <div className="error-box">아카이브 로딩 오류: {err}</div>;
+  if (!items) return <div className="loading"><div className="spinner"></div><span>불러오는 중...</span></div>;
+
+  const types = ['전체',...new Set(items.map(i=>i.type).filter(Boolean))];
+  const filtered = filter==='전체'?items:items.filter(i=>i.type===filter);
+
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">경험 아카이브</div>
+        <div className="ph-sub">총 {items.length}개의 경험이 기록되어 있습니다</div>
+      </div>
+      <div className="filter-bar">
+        {types.map(t=><button key={t} className={`filter-btn${filter===t?' active':''}`} onClick={()=>setFilter(t)}>{t}</button>)}
+      </div>
+      {filtered.length===0
+        ? <div style={{color:'var(--sub)',fontSize:13}}>표시할 항목이 없습니다.</div>
+        : <div className="archive-grid">
+            {filtered.map((item,i)=>(
+              <div key={i} className="archive-card">
+                <div className="archive-meta">
+                  {item.type && <span className="bdg bdg-gray">{item.type}</span>}
+                  {item.date && <span style={{fontSize:11,color:'var(--sub)'}}>{fmt(item.date)}</span>}
+                </div>
+                <div className="archive-title">{item.title||item._file.replace('.md','')}</div>
+                {item.organization && <div className="archive-org">{item.organization}</div>}
+                {item.star_result && <div className="archive-result">✦ {item.star_result}</div>}
+                {item.strength && (
+                  <div style={{marginTop:10,display:'flex',flexWrap:'wrap',gap:4}}>
+                    {(Array.isArray(item.strength)?item.strength:[item.strength]).map((s,j)=>(
+                      <span key={j} className="bdg bdg-green" style={{fontSize:10}}>{s}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+      }
+    </div>
+  );
+}
+
+/* ══ Skills Page ══ */
+function SkillsPage({gh}) {
+  const [data, setData] = useState(null);
+  const [err, setErr] = useState('');
+  const chartRef = useRef(null);
+  const chartInst = useRef(null);
+
+  useEffect(()=>{
+    async function load() {
+      try {
+        const cfg = await gh.getConfig();
+        const excl = cfg.archiveExclude||['index.md','log.md','_template.md'];
+        const [profileText, archiveFiles] = await Promise.all([
+          gh.getFile(cfg.profile).catch(()=>''),
+          gh.getDir(cfg.archive),
+        ]);
+        const {meta:profile} = parseFM(profileText);
+        const cnt = {};
+        const mdFiles = archiveFiles.filter(f=>f.type==='file'&&f.name.endsWith('.md')&&!excl.includes(f.name));
+        await Promise.all(mdFiles.map(async f=>{
+          try {
+            const t=await gh.getFile(`${cfg.archive}/${f.name}`);
+            const {meta}=parseFM(t);
+            const ss=Array.isArray(meta.strength)?meta.strength:meta.strength?[meta.strength]:[];
+            ss.forEach(s=>{cnt[s]=(cnt[s]||0)+1});
+          } catch {}
+        }));
+        setData({profile, chart:Object.entries(cnt).sort((a,b)=>b[1]-a[1])});
+      } catch(e) { setErr(e.message); }
+    }
+    load();
+  },[]);
+
+  useEffect(()=>{
+    if (!data||!chartRef.current||!data.chart.length) return;
+    if (chartInst.current) chartInst.current.destroy();
+    chartInst.current = new Chart(chartRef.current, {
+      type:'bar',
+      data:{
+        labels: data.chart.map(([k])=>k),
+        datasets:[{
+          data: data.chart.map(([,v])=>v),
+          backgroundColor:'rgba(27,61,42,.08)',
+          borderColor:'#2E7D50',
+          borderWidth:1.5,
+          borderRadius:8,
+          hoverBackgroundColor:'rgba(46,125,80,.15)',
+        }]
+      },
+      options:{
+        indexAxis:'y', responsive:true,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{ticks:{stepSize:1,color:'#9DB8A8'},grid:{color:'#F4F7F5'},border:{display:false}},
+          y:{ticks:{font:{size:12.5},color:'#1B3D2A'},grid:{display:false},border:{display:false}}
+        }
+      }
+    });
+    return ()=>{ if (chartInst.current) chartInst.current.destroy(); };
+  },[data]);
+
+  if (err) return <div className="error-box">역량 데이터 오류: {err}</div>;
+  if (!data) return <div className="loading"><div className="spinner"></div><span>불러오는 중...</span></div>;
+
+  const m = data.profile;
+  return (
+    <div>
+      <div className="ph">
+        <div className="ph-title">역량 분포</div>
+        <div className="ph-sub">경험 아카이브 기반 자동 분석</div>
+      </div>
+      {data.chart.length>0 ? <>
+        <div className="sl">역량별 경험 수</div>
+        <div className="chart-card"><canvas ref={chartRef}></canvas></div>
+      </> : (
+        <div className="card" style={{color:'var(--sub)',fontSize:13}}>archive/ 폴더 파일에 <code>strength</code> 필드를 추가하면 차트가 표시됩니다.</div>
+      )}
+      {m.skills && <>
+        <div className="sl">스킬 현황</div>
+        <div className="two-col">
+          {m.skills.domains?.length>0 && <div className="inner-card"><div className="inner-card-title">도메인 역량</div><div className="tags">{m.skills.domains.map((d,i)=><span key={i} className="tag">{d}</span>)}</div></div>}
+          {m.skills.tools?.length>0   && <div className="inner-card"><div className="inner-card-title">툴 & 기술</div><div className="tags">{m.skills.tools.map((t,i)=><span key={i} className="tag tag-tool">{t}</span>)}</div></div>}
+        </div>
+      </>}
+    </div>
+  );
+}
+
+/* ══ App Root ══ */
+function App() {
+  const [config, setConfig] = useState(()=>{
+    if (window.__SERVER_CONFIG?.owner&&window.__SERVER_CONFIG?.repo) return window.__SERVER_CONFIG;
+    try { return JSON.parse(localStorage.getItem('dashboard_config')||'null'); } catch { return null; }
+  });
+  const [page, setPage] = useState('home');
+  const gh = config ? makeGH(config) : null;
+
+  function handleReset() { localStorage.removeItem('dashboard_config'); setConfig(null); }
+
+  if (!config) return <SetupScreen onSave={setConfig} />;
+
+  const pages = {
+    home:    <HomePage gh={gh} />,
+    profile: <ProfilePage gh={gh} />,
+    archive: <ArchivePage gh={gh} />,
+    skills:  <SkillsPage gh={gh} />,
+  };
+
+  return (
+    <div className="layout">
+      <Sidebar page={page} setPage={setPage} onReset={handleReset} config={config} />
+      <div className="main">{pages[page]}</div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
